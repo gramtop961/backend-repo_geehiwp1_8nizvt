@@ -1,48 +1,48 @@
 """
-Database Schemas
+Database Schemas for Villa & Farmhouse Rental App
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a MongoDB collection. The collection name is the
+lowercase of the class name (e.g., Property -> "property").
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from typing import List, Optional
+from pydantic import BaseModel, Field, EmailStr
 
-# Example schemas (replace with your own):
 
+class Host(BaseModel):
+    name: str = Field(..., description="Host full name")
+    email: EmailStr = Field(..., description="Host contact email")
+    phone: Optional[str] = Field(None, description="Host phone number")
+
+
+class Property(BaseModel):
+    title: str = Field(..., description="Listing title")
+    description: Optional[str] = Field(None, description="Detailed description")
+    property_type: str = Field(..., description="villa | farmhouse | cottage | mansion")
+    location: str = Field(..., description="City/Area name")
+    country: str = Field(..., description="Country")
+    price_per_night: float = Field(..., ge=0, description="Nightly rate in USD")
+    max_guests: int = Field(..., ge=1, description="Maximum number of guests")
+    bedrooms: int = Field(..., ge=0)
+    bathrooms: int = Field(..., ge=0)
+    amenities: List[str] = Field(default_factory=list, description="List of amenities")
+    images: List[str] = Field(default_factory=list, description="Image URLs")
+    rating: Optional[float] = Field(None, ge=0, le=5, description="Average rating")
+    host: Host = Field(..., description="Host details")
+
+
+class Booking(BaseModel):
+    property_id: str = Field(..., description="ID of the property being booked")
+    guest_name: str = Field(..., description="Guest full name")
+    guest_email: EmailStr = Field(..., description="Guest email")
+    check_in: str = Field(..., description="ISO date (YYYY-MM-DD)")
+    check_out: str = Field(..., description="ISO date (YYYY-MM-DD)")
+    guests: int = Field(..., ge=1, description="Number of guests")
+    total_price: float = Field(..., ge=0)
+
+
+# Example additional schemas (kept for reference of viewer; not used directly)
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
-
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    name: str
+    email: EmailStr
+    is_active: bool = True
